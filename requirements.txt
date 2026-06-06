@@ -1,0 +1,17 @@
+fastapi
+uvicorn[standard]
+python-multipart
+beautifulsoup4
+markitdown[all]
+playwright
+browser-use
+cryptography
+lancedb
+sentence-transformers
+rapidfuzz
+numpy
+trafilatura
+readability-lxml
+httpx
+wasmtime
+pytest

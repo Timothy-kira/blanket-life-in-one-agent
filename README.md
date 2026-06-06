@@ -1,7 +1,5 @@
 # Blanket Life in One Agent
 
-> LongCat Backend — FastAPI 外壳 + Flask 遗留业务核心的混合架构。
-
 ## 架构图
 
 ```mermaid
@@ -46,7 +44,7 @@ flowchart TB
     end
 
     subgraph Agents["Agent 层 — app/services/"]
-        A1["miroflow_search_agent.py\nMiroFlow Search SubAgent\nLLM 工具调用解析"]
+        A1["miroflow_search_agent.py\nMiroFlow Search SubAgent"]
     end
 
     subgraph External["外部依赖"]
@@ -88,7 +86,7 @@ flowchart TB
 |---|---|---|
 | 入口层 | `server.py` | 读取环境变量，启动 Uvicorn |
 | FastAPI 外壳 | `app/main.py` | 新接口实现 + 挂载遗留路由 + 静态文件 |
-| 兼容层 | `app/compat/flaskish.py`<br>`app/compat/asgi.py` | 让旧 Flask 代码无需重写即可跑在 FastAPI 上 |
+| 兼容层 | `app/compat/flaskish.py`<br>`app/compat/asgi.py` | 迁移兼容flask代码 |
 | 遗留业务核心 | `app/services/legacy_server.py` | 3.3 万行业务逻辑：记忆、文件转换、浏览器、Agent、搜索、旅行 |
 | 运行时 | `app/runtime/agent_runtime.py`<br>`app/runtime/wasm_sandbox.py` | 会话级 Lane/Resource 调度、WASM 沙箱执行 |
 | Agent | `app/services/miroflow_search_agent.py` | 搜索子 Agent、LLM 工具调用解析 |

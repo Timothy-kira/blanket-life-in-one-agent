@@ -28,7 +28,7 @@ flowchart TB
         CA["asgi.py\n路由转换 + 请求适配\nFlask Rule → Starlette Route\nWS 同步 → 异步桥接"]
     end
 
-    subgraph Legacy["遗留业务核心 — app/services/legacy_server.py"]
+    subgraph Legacy["业务核心 — app/services/legacy_server.py"]
         L1["文件转换\nMarkItDown"]
         L2["群聊数据\n.longcat_groups.json"]
         L3["记忆系统\nSQLite + FTS5 + LanceDB"]
@@ -123,6 +123,5 @@ flowchart TB
 | 入口层 | `server.py` | 读取环境变量，启动 Uvicorn |
 | FastAPI 外壳 | `app/main.py` | 新接口实现 + 挂载遗留路由 + 静态文件 |
 | 兼容层 | `app/compat/flaskish.py`<br>`app/compat/asgi.py` | 迁移兼容flask代码 |
-| 遗留业务核心 | `app/services/legacy_server.py` | 记忆、文件转换、浏览器、Agent、搜索、旅行等业务逻辑 |
+| 业务核心 | `app/services/legacy_server.py` | 记忆、文件转换、浏览器、Agent、搜索、旅行等业务逻辑 |
 | 运行时 | `app/runtime/agent_runtime.py`<br>`app/runtime/wasm_sandbox.py` | 会话级 Lane/Resource 调度、WASM 沙箱执行 |
-| Agent | `app/services/miroflow_search_agent.py` | 搜索子 Agent |

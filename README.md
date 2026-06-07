@@ -166,20 +166,7 @@ RAW 层保存每次对话的原始消息。在上下文窗口允许时，模型�
 
 这样，即使对话很长，Agent 也不会突然「失忆」，而是像人一样保留近期细节、压缩远期细节，并定期更新纠正记忆。
 
-## 🟢 2. Agent 框架
-
-核心原生 Agent 循环 `_native_create_agent_run` 实现了以下机制：
-
-- **动态预算系统**（`_NativeIterationBudget`）：wall 时间上限、token 预算、软/硬轮次上限、卡死检测与自动降级
-- **多轮工具调用**：模型自主决策 → 解析 tool calls → 并行/流式执行 → 结果回注 → 下一轮推理
-- **DAG 计划拦截器**：当存在 `plan_task` 创建的活跃计划时，按 `depends_on` 依赖关系调度步骤执行
-- **会话挂起与恢复**：`ask_user_clarification` 等工具可挂起会话；支持 checkpoint 断点恢复与 `native-chat/resume` 续跑
-- **工具执行隔离**：根据工具类型自动选择进程隔离（process pool）、WASM 沙箱或同进程执行
-- **流式预执行**：安全工具可在模型流式输出期间提前启动，减少等待延迟
-- **工具重复策略**：自动检测低质量结果并决定重试、合并或丢弃
-- **Lane 调度集成**：工具执行落入 `fast / io / compute / plan / subagent` 五车道，由 `agent_runtime.py` 统一管控并发与资源
-
-## 🟢 3. 原生注册工具
+## 🟢 2. 原生注册工具
 
 | 类别 | 工具名 | 说明 |
 |---|---|---|
@@ -192,15 +179,28 @@ RAW 层保存每次对话的原始消息。在上下文窗口允许时，模型�
 | 计划执行 | `plan_task` | 创建/更新 DAG 执行计划，支持 depends_on 依赖 |
 | 信息查询 | `search_web` | 联网搜索（由搜索子代理完成抓取与验证） |
 | | `search_memory` | 读取用户长期记忆与会话摘要 |
-| | `resolve_location_anchor` | 解析用户保存的位置锚点（家/公司等） |
-| 生活服务 | `search_merchants` / `select_merchant_cards` | 商户候选池查询与卡片筛选 |
-| | `search_movies` | 电影卡片查询 |
 | | `search_papers` | 学术论文查询（arxiv / pubmed 等） |
+| **本地生活** | `search_merchants` / `select_merchant_cards` | 商户候选池查询与卡片筛选 |
+| | `search_movies` | 电影卡片查询 |
 | | `get_weather` | 实时天气与预报 |
 | | `get_time` | 当前时间/日期 |
 | | `search_train_tickets` | 12306 火车票/高铁查询 |
-| | `plan_navigation` | 路线规划与导航 |
+| | <b><span style="color:#1B5E20">`resolve_location_anchor`</span></b> | 解析用户保存的位置锚点（家/公司等） |
+| | <b><span style="color:#1B5E20">`plan_navigation`</span></b> | 路线规划与导航 |
 | 展示 | `display_cards` | 选择并展示已生成的 artifact 卡片 |
+
+## 🟢 3. Agent 框架
+
+核心原生 Agent 循环 `_native_create_agent_run` 实现了以下机制：
+
+- **动态预算系统**（`_NativeIterationBudget`）：wall 时间上限、token 预算、软/硬轮次上限、卡死检测与自动降级
+- **多轮工具调用**：模型自主决策 → 解析 tool calls → 并行/流式执行 → 结果回注 → 下一轮推理
+- **DAG 计划拦截器**：当存在 `plan_task` 创建的活跃计划时，按 `depends_on` 依赖关系调度步骤执行
+- **会话挂起与恢复**：`ask_user_clarification` 等工具可挂起会话；支持 checkpoint 断点恢复与 `native-chat/resume` 续跑
+- **工具执行隔离**：根据工具类型自动选择进程隔离（process pool）、WASM 沙箱或同进程执行
+- **流式预执行**：安全工具可在模型流式输出期间提前启动，减少等待延迟
+- **工具重复策略**：自动检测低质量结果并决定重试、合并或丢弃
+- **Lane 调度集成**：工具执行落入 `fast / io / compute / plan / subagent` 五车道，由 `agent_runtime.py` 统一管控并发与资源
 
 ## 分层说明
 

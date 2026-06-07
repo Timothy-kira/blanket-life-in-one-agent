@@ -168,26 +168,34 @@ RAW 层保存每次对话的原始消息。在上下文窗口允许时，模型�
 
 ## 🟢 2. function call，让模型 think to action
 
-| 类别 | 工具名 | 说明 |
+工具之间存在明确的嵌套与依赖关系。下面是按层级梳理的调用结构，子级工具由父级调用或强依赖于父级产出。
+
+| 层级 | 工具 | 说明 |
 |---|---|---|
-| Agent 编排 | `spawn_agent` | 启动独立子 agent，支持后台运行、fork、WASM 隔离 |
-| | `run_wasm_python` | 在 WASI WebAssembly 沙箱中执行纯 Python |
-| 任务管理 | `task_create` / `task_get` / `task_list` / `task_stop` / `task_output` | 创建、查询、停止、读取 agent task |
-| 团队协作 | `create_team` / `send_to_agent` | 创建 agent team 与 mailbox 消息 |
-| 工具发现 | `tool_search` | 按需检索并动态加载工具 schema |
-| 用户交互 | `ask_user_clarification` | 发起问卷并挂起会话等待用户确认 |
-| 计划执行 | `plan_task` | 创建/更新 DAG 执行计划，支持 depends_on 依赖 |
-| 信息查询 | `search_web` | 联网搜索（由搜索子代理完成抓取与验证） |
-| | `search_memory` | 读取用户长期记忆与会话摘要 |
-| | `search_papers` | 学术论文查询（arxiv / pubmed 等） |
-| **本地生活** | `search_merchants` / `select_merchant_cards` | 商户候选池查询与卡片筛选 |
-| | `search_movies` | 电影卡片查询 |
+| **编排与容器** | `plan_task` | DAG 计划容器，只写入/更新计划，后续由调度器将步骤转为 tool_call 执行 |
+| | `spawn_agent` | 子 Agent 容器，启动独立进程或 WASM 沙箱任务 |
+| | ├─ `run_wasm_python` | `spawn_agent(isolation=wasm)` 的实际执行体 |
+| | └─ *(子 Agent 内授权工具)* | 由 `resolved_tool_names` 控制可调用的工具集合 |
+| **任务生命周期** | `task_create` | 仅注册 pending 任务，不启动执行 |
+| | ├─ `task_get` / `task_list` / `task_output` | 读取任务状态与输出 |
+| | └─ `task_stop` | 停止运行中的任务 |
+| **团队协作** | `create_team` | 创建 agent team 与 mailbox |
+| | └─ `send_to_agent` | 向 team 中指定 agent 的 mailbox 发消息 |
+| **工具发现** | `tool_search` | 按需检索并动态加载其他工具的 schema 到上下文 |
+| **子代理型业务工具** | `search_web` | 启动 SearchSubAgent，内部完成搜索→选源→抓取→验证→摘要 |
+| | `search_movies` | 启动 MovieSubAgent，返回电影卡片 |
+| **本地生活** | `search_merchants` | 启动 MerchantSubAgent，召回高德商户候选池 |
+| | └─ `select_merchant_cards` | 依赖 `search_merchants` 产出的 merchant_pool，做偏好筛选并生成最终卡片 |
 | | `get_weather` | 实时天气与预报 |
 | | `get_time` | 当前时间/日期 |
 | | `search_train_tickets` | 12306 火车票/高铁查询 |
-| | <b><span style="color:#1B5E20">`resolve_location_anchor`</span></b> | 解析用户保存的位置锚点（家/公司等） |
-| | <b><span style="color:#1B5E20">`plan_navigation`</span></b> | 路线规划与导航 |
-| 展示 | `display_cards` | 选择并展示已生成的 artifact 卡片 |
+| | <b><span style="color:#1B5E20">`resolve_location_anchor`</span></b> | 解析用户保存的位置锚点（家/公司等），输出常作为后续位置类工具的入参 |
+| | <b><span style="color:#1B5E20">`plan_navigation`</span></b> | 启动 NavigationSubAgent，规划路线与导航 |
+| **信息查询（叶子）** | `search_memory` | 读取用户长期记忆与会话摘要 |
+| | `search_papers` | 学术论文查询（arxiv / pubmed 等） |
+| **代码执行（叶子）** | `run_wasm_python` | 在 WASI WebAssembly 沙箱中执行纯 Python |
+| **用户交互（叶子）** | `ask_user_clarification` | 发起问卷并挂起会话等待用户确认 |
+| **展示（依赖前置）** | `display_cards` | 依赖前置工具注册的 `card_artifacts`，选择并展示 artifact 卡片 |
 
 ## 🟢 3. Agent 框架
 

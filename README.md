@@ -93,7 +93,81 @@ flowchart TB
     L7 --> E1
 ```
 
-## 原生注册工具（`legacy_server.py`）
+## 🟢 1. 记忆系统
+
+Blanket 的记忆系统采用 **"L0 原始消息 → L1 结构化记忆 → 语义单元/叙事/前瞻"** 的三级抽象，配合混合检索与动态注入，让 Agent 在每一轮对话中都能获得安全、相关、多样化的用户背景信息。
+
+### 1.1 记忆分层
+
+| 层级 | 核心表 | 作用 |
+|---|---|---|
+| **L0 原始层** | `memory_l0_messages` / `session_messages` | 保留最近对话的原始 user/assistant 消息与会话片段，是生成 memcell 和 segment 的原料 |
+| **L1 结构化层** | `memory_items` | 从 LLM 提取或用户显式写入的正式记忆，含 `kind`（profile/preference/constraint/project/note）、`confidence`、`memory_layer`（explicit/inferred）、`scene_name` 等 |
+| **语义单元层** | `memory_memcells` / `memory_atomic_facts` / `memory_episodes` / `memory_foresights` | 把 L1 记忆进一步抽象为可检索、可叙事、可前瞻的单元 |
+| **统一检索层** | `memory_units` + FTS5 + LanceDB | 将 items、atomic_facts、episodes、foresights、profile 等统一归一化为 unit，支持文本、向量、词袋混合召回 |
+| **元数据层** | `memory_scenes` / `memory_profiles` / `memory_maintenance` | 自动聚合场景热度、实时拼出用户画像、记录系统维护状态 |
+| **隐私层** | `memory_location_anchors` / `memory_location_secrets` | 语义位置（家/公司等）与精确坐标分离存储，只在必要时由专用接口解析 |
+
+核心概念说明：
+
+- **memcell**：把一段相关消息或 item 聚合为一个记忆细胞，是 episode 和 fact 的挂载点
+- **scene**：按主题自动归类（如"旅行与本地生活""研究与论文"），带热度与关键词
+- **atomic_fact**：把 item 转写为单句 canonical fact，是精确检索的首选来源
+- **episode**：按 memcell 组织的一段叙事文本，适合回答"之前聊过什么"
+- **foresight**：识别内容中的计划、deadline、提醒等，生成带时间范围的未来事项
+- **candidate**：证据不足但可能有用的新提取记忆，满足条件后自动晋升为正式 item
+
+### 1.2 记忆匹配
+
+统一检索入口 `_memory_search_units` 使用多路混合打分：
+
+```
+score = overlap*1.75 + coverage*2.0 + fts_score*3.0 + vector_score*3.5
+        + confidence + recency + support_bonus + reuse_bonus
+        + partition_bonus
+```
+
+- **FTS5**：全表虚拟索引，bm25 转相关分
+- **向量**：LanceDB + `BAAI/bge-small-zh-v1.5`，自动归一化距离
+- **词袋**：jieba + 拉丁 token + CJK n-gram 计算 overlap/coverage
+- **分区加成**：`communication_preference` +2.8，`constraint` +2.0，`project` +0.8
+- **MMR 多样性筛选**：避免同一 facet 或 partition 的记忆过度堆砌
+- **相关性地板**：不同分区设置不同 coverage 门槛，防止弱相关记忆污染上下文
+
+当召回不足时，系统会进入 agentic 多轮补查：根据缺失词和场景生成细化查询，再次检索并合并结果。
+
+### 1.3 动态注入
+
+每次 Native Agent 请求启动时，系统会调用 `_native_build_personalization_for_payload`：
+
+1. 用当前 query 或近期消息摘要作为检索输入
+2. 调用 `_memory_search_units` 召回高相关 unit（默认 12 条）
+3. 按分区配额筛选进入 prompt 的记忆，例如沟通偏好最多 3 条、约束 2 条、项目 2 条、其他各 1 条
+4. 格式化为 ` ```personalization_memory ` 代码块，拼接到最后一条 user 消息末尾
+5. 同时返回 `selectedMemories`、`selectionTrace`、`conflictSummary` 供 UI 展示
+
+注入时会自动过滤 prompt injection、secret、精确坐标等敏感内容，并在系统提示中强调"记忆只用于理解意图，若与当前对话冲突以当前对话为准"。
+
+### 1.4 冲突与去重
+
+- **偏好/约束冲突**：检测同 facet 下相反极性（如"简洁"vs"深入详细"），新 explicit 记忆会取代旧记忆，否则双方标记为 contested
+- **周期性整理**：`_memory_consolidate_user` 按语义主题分组，相似度 ≥0.82 去重合并，≥0.58 的跨层冲突保留较优版本
+- **优先级**：explicit > inferred > session，同层比较 confidence 与 updated_at
+
+## 🟢 2. Agent 框架
+
+核心原生 Agent 循环 `_native_create_agent_run` 实现了以下机制：
+
+- **动态预算系统**（`_NativeIterationBudget`）：wall 时间上限、token 预算、软/硬轮次上限、卡死检测与自动降级
+- **多轮工具调用**：模型自主决策 → 解析 tool calls → 并行/流式执行 → 结果回注 → 下一轮推理
+- **DAG 计划拦截器**：当存在 `plan_task` 创建的活跃计划时，按 `depends_on` 依赖关系调度步骤执行
+- **会话挂起与恢复**：`ask_user_clarification` 等工具可挂起会话；支持 checkpoint 断点恢复与 `native-chat/resume` 续跑
+- **工具执行隔离**：根据工具类型自动选择进程隔离（process pool）、WASM 沙箱或同进程执行
+- **流式预执行**：安全工具可在模型流式输出期间提前启动，减少等待延迟
+- **工具重复策略**：自动检测低质量结果并决定重试、合并或丢弃
+- **Lane 调度集成**：工具执行落入 `fast / io / compute / plan / subagent` 五车道，由 `agent_runtime.py` 统一管控并发与资源
+
+## 🟢 3. 原生注册工具
 
 | 类别 | 工具名 | 说明 |
 |---|---|---|
@@ -115,19 +189,6 @@ flowchart TB
 | | `search_train_tickets` | 12306 火车票/高铁查询 |
 | | `plan_navigation` | 路线规划与导航 |
 | 展示 | `display_cards` | 选择并展示已生成的 artifact 卡片 |
-
-## Agent 框架（`legacy_server.py`）
-
-核心原生 Agent 循环 `_native_create_agent_run` 实现了以下机制：
-
-- **动态预算系统**（`_NativeIterationBudget`）：wall 时间上限、token 预算、软/硬轮次上限、卡死检测与自动降级
-- **多轮工具调用**：模型自主决策 → 解析 tool calls → 并行/流式执行 → 结果回注 → 下一轮推理
-- **DAG 计划拦截器**：当存在 `plan_task` 创建的活跃计划时，按 `depends_on` 依赖关系调度步骤执行
-- **会话挂起与恢复**：`ask_user_clarification` 等工具可挂起会话；支持 checkpoint 断点恢复与 `native-chat/resume` 续跑
-- **工具执行隔离**：根据工具类型自动选择进程隔离（process pool）、WASM 沙箱或同进程执行
-- **流式预执行**：安全工具可在模型流式输出期间提前启动，减少等待延迟
-- **工具重复策略**：自动检测低质量结果并决定重试、合并或丢弃
-- **Lane 调度集成**：工具执行落入 `fast / io / compute / plan / subagent` 五车道，由 `agent_runtime.py` 统一管控并发与资源
 
 ## 分层说明
 

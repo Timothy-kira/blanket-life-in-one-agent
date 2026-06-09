@@ -241,12 +241,4 @@ Blanket 为此引入了 WASM 沙箱。它像一个极度轻量的虚拟机，启
 
 最后，所有工具调用都落在五档车道里——fast、io、compute、plan、subagent——由 runtime 统一管控并发和资源配额。这样既保证了响应速度，也防止了某类任务把系统挤爆。
 
-## 分层说明
 
-| 层级 | 关键文件 | 职责 |
-|---|---|---|
-| 入口层 | `server.py` | 读取环境变量，启动 Uvicorn |
-| FastAPI 外壳 | `app/main.py` | 新接口实现 + 挂载遗留路由 + 静态文件 |
-| 兼容层 | `app/compat/flaskish.py`<br>`app/compat/asgi.py` | 迁移兼容flask代码 |
-| 业务核心 | `app/services/legacy_server.py` | 记忆、文件转换、浏览器、Agent、搜索、旅行等业务逻辑 |
-| 运行时 | `app/runtime/agent_runtime.py`<br>`app/runtime/wasm_sandbox.py` | 会话级 Lane/Resource 调度、WASM 沙箱执行 |

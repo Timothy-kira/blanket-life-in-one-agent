@@ -327,6 +327,8 @@ Blanket 识别到这是一个导航规划请求，自动调用 `plan_navigation`
 
 ![火车票筛选](docs/images/火车票筛选.jpg)
 
-### 案例 6：跨时区时间
+### 案例 6：发起问卷
 
-![跨时区时间](docs/images/跨时区.jpg)
+当点击商户卡片的导航按钮，系统会主动询问。
+
+![发起问卷](docs/images/问卷.jpg)

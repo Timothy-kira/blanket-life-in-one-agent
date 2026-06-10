@@ -352,3 +352,13 @@ Blanket 识别到这是一个导航规划请求，自动调用 `plan_navigation`
 ![多点规划](docs/images/Screenshot_20260610_094826.jpg)
 
 ![多点规划2](docs/images/Screenshot_20260610_094848.jpg)
+
+### 案例 9：空间
+
+> 尚未完成开发。
+
+在空间内，打造人与人、人与 Agent 的交互，避免了传统的多人之间探讨意见、各自再和 AI 交流、社交软件内不断修订意见和线路，而是在统一的交互形式内直接完成。
+
+![空间1](docs/images/空间1.jpg)
+
+![空间2](docs/images/空间2.jpg)

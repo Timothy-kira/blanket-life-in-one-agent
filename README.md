@@ -326,3 +326,7 @@ Blanket 识别到这是一个导航规划请求，自动调用 `plan_navigation`
 ![火车票详情](docs/images/火车票反面.jpg)
 
 ![火车票筛选](docs/images/火车票筛选.jpg)
+
+### 案例 6：跨时区时间
+
+![跨时区时间](docs/images/跨时区.jpg)

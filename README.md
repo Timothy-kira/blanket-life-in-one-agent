@@ -342,3 +342,13 @@ Blanket 识别到这是一个导航规划请求，自动调用 `plan_navigation`
 更多实机演示视频请见 [小红书](https://www.xiaohongshu.com/collection/item/69e65e6a01f6000000000001?xhsshare=&appuid=64ad6f14000000001f005165&apptime=1781052291&share_id=fd1ac9c811704106af6c54a62d58ac2e&share_channel=copy_link)。
 
 ![generate](docs/images/generate.gif)
+
+### 案例 8：多点规划
+
+> 仍处于开发阶段。
+
+当用户点击规划按钮，系统会自动根据地点计算出最优路线。
+
+![多点规划](docs/images/Screenshot_20260610_094826.jpg)
+
+![多点规划2](docs/images/Screenshot_20260610_094848.jpg)

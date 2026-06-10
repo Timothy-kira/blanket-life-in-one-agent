@@ -339,10 +339,6 @@ Blanket 识别到这是一个导航规划请求，自动调用 `plan_navigation`
 
 ![电影推荐](docs/images/电影卡片.png)
 
-更多实机演示视频请见 [小红书](https://www.xiaohongshu.com/collection/item/69e65e6a01f6000000000001?xhsshare=&appuid=64ad6f14000000001f005165&apptime=1781052291&share_id=fd1ac9c811704106af6c54a62d58ac2e&share_channel=copy_link)。
-
-![generate](docs/images/generate.gif)
-
 ### 案例 8：多点规划
 
 > 仍处于开发阶段。
@@ -362,3 +358,9 @@ Blanket 识别到这是一个导航规划请求，自动调用 `plan_navigation`
 ![空间1](docs/images/空间1.jpg)
 
 ![空间2](docs/images/空间2.jpg)
+
+---
+
+更多实机演示视频请见 [小红书](https://www.xiaohongshu.com/collection/item/69e65e6a01f6000000000001?xhsshare=&appuid=64ad6f14000000001f005165&apptime=1781052291&share_id=fd1ac9c811704106af6c54a62d58ac2e&share_channel=copy_link)。
+
+![generate](docs/images/generate.gif)

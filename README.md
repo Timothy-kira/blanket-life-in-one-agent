@@ -193,10 +193,10 @@ RAW 层保存每次对话的原始消息。在上下文窗口允许时，模型�
 | | `search_train_tickets` | 12306 火车票/高铁查询 |
 | | <b><span style="color:#1B5E20">`resolve_location_anchor`</span></b> | 解析用户保存的位置锚点（家/公司等），输出常作为后续位置类工具的入参 |
 | | <b><span style="color:#1B5E20">`plan_navigation`</span></b> | 启动 NavigationSubAgent，规划路线与导航 |
-| **信息查询（叶子）** | `search_memory` | 读取用户长期记忆与会话摘要 |
+| **信息查询** | `search_memory` | 读取用户长期记忆与会话摘要 |
 | | `search_papers` | 学术论文查询（arxiv / pubmed 等） |
-| **代码执行（叶子）** | `run_wasm_python` | 在 WASI WebAssembly 沙箱中执行纯 Python |
-| **用户交互（叶子）** | `ask_user_clarification` | 发起问卷并挂起会话等待用户确认 |
+| **代码执行** | `run_wasm_python` | 在 WASI WebAssembly 沙箱中执行纯 Python |
+| **用户交互** | `ask_user_clarification` | 发起问卷并挂起会话等待用户确认 |
 | **展示（依赖前置）** | `display_cards` | 依赖前置工具注册的 `card_artifacts`，选择并展示 artifact 卡片 |
 
 ## 🟢 3. Agent 框架
@@ -250,7 +250,7 @@ Agent 框架能不能跑得快，不只看模型本身有多聪明，还看执�
 所有工具调用被分到五档车道：fast、io、compute、plan、subagent。查时间、展示卡片走 fast 车道，并发位最多；网络查询走 io 车道，可以并行等待；复杂计算走 compute 车道，独占 CPU。轻量工具不会被重任务堵住。
 
 **后台执行**
-深度研究、轨迹反思等耗时任务可以丢到后台运行。用户可以继续聊天，等后台任务完成后结果自动注入对话。spawn_agent 也可以后台化，不卡主对话流。
+深度研究、轨迹反思、记忆整理等耗时任务可以丢到后台运行。用户可以继续聊天，等后台任务完成后结果自动注入对话。spawn_agent 也可以后台化，不卡主对话流。
 
 **写时复制上下文**
 多个工具并行执行时，Blanket 不会每次都深拷贝整份上下文。而是采用写时复制策略：只读数据共享引用，只有真正修改时才复制。这让并行子代理的启动成本从线性降到接近常数。

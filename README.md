@@ -367,6 +367,20 @@ Blanket 识别到用户在导航需求中附加了顺路打卡点，自动在起
 
 ![空间2](docs/images/空间2.jpg)
 
+### 案例 10：论文调研
+
+1. **Paper Search MCP**：整合多源论文，支持模糊语义查询。
+2. **仓库提醒**：当论文包含真实仓库时，会显示 GitHub / Hugging Face 认证标识，避免精读完论文才发现假开源。
+3. **排版优化**：传统 PDF 和 HTML 论文排版并不适合移动端阅读，Blanket 借助 MinerU 针对原始内容进行二次排版。
+4. **逐段翻译**：借助先进的 LLM，在快速翻译的同时让译文更贴合语境。
+5. **AI 解答**：向 AI 提问时，AI 会参考论文原文，同时自动抓取仓库代码和文件信息。
+
+![论文提问](docs/images/论文提问.jpg)
+
+![阅读器内提问](docs/images/阅读器内提问.jpg)
+
+![阅读器内翻译](docs/images/阅读器内翻译.jpg)
+
 ---
 
 更多实机演示视频请见 [小红书](https://www.xiaohongshu.com/collection/item/69e65e6a01f6000000000001?xhsshare=&appuid=64ad6f14000000001f005165&apptime=1781052291&share_id=fd1ac9c811704106af6c54a62d58ac2e&share_channel=copy_link)。

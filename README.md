@@ -381,6 +381,10 @@ Blanket 识别到用户在导航需求中附加了顺路打卡点，自动在起
 
 ![阅读器内翻译](docs/images/阅读器内翻译.jpg)
 
+![论文翻译演示](docs/images/论文翻译演示.jpg)
+
+![论文精度阅读器](docs/images/论文精度阅读器.jpg)
+
 ---
 
 更多实机演示视频请见 [小红书](https://www.xiaohongshu.com/collection/item/69e65e6a01f6000000000001?xhsshare=&appuid=64ad6f14000000001f005165&apptime=1781052291&share_id=fd1ac9c811704106af6c54a62d58ac2e&share_channel=copy_link)。
